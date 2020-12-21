@@ -4,6 +4,24 @@ var router = express.Router();
 var grid = {};    
 var players = {};  
 SetUpBoard();
+setInterval(addReinforcements, 10000);
+
+function addReinforcements() {
+    console.log('Updating Reinforcements');
+    //could use entries?
+    for (const row of Object.keys(grid)) {
+        for (const cell of Object.keys(grid[row])) {
+            if (grid[row][cell].owner !== 0)
+            {   
+                players[grid[row][cell].owner].units++;
+            }
+        }
+    }
+}
+  
+
+
+
 
 function SetUpBoard()
 {
@@ -25,16 +43,16 @@ function SetUpBoard()
     players[5] = {units: 5};
 
     grid[0][0]["owner"] = 1;
-    grid[0][0]["units"] = 99;
+    grid[0][0]["units"] = 50;
 
     grid[0][29]["owner"] = 2;
-    grid[0][29]["units"] = 99;
+    grid[0][29]["units"] = 50;
 
     grid[19][29]["owner"] = 3;
-    grid[19][29]["units"] = 99;
+    grid[19][29]["units"] = 50;
 
     grid[19][0]["owner"] = 4;
-    grid[19][0]["units"] = 99;
+    grid[19][0]["units"] = 50;
 }
 
 
@@ -61,7 +79,8 @@ router.post('/deploy/:pId/:x1/:y1', function(req, res, next) {
     const y1 = req.params.y1;
 
     if (players[pId].units>0 &&  //have units to deploy
-        pId === g[y1][x1].owner) //valid target?
+        pId === g[y1][x1].owner && 
+        g[y1][x1].units < 99) //valid target?
     {
         g[y1][x1].units++;
         players[pId].units--;
@@ -75,9 +94,9 @@ router.post('/deploy/:pId/:x1/:y1', function(req, res, next) {
 //Return player data
 //Should force authentication
 router.get('/player/:pId', function(req, res, next) {
-    console.log ("Getting player data: " + pId);
+    
     const pId = parseInt(req.params.pId);
-
+    console.log ("Getting player data: " + pId);
     res.json(players[pId]);
 });
 
