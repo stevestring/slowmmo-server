@@ -2,6 +2,7 @@ var express = require('express');
 var router = express.Router();
 
 var grid = {};    
+var players = {};  
 SetUpBoard();
 
 function SetUpBoard()
@@ -16,6 +17,12 @@ function SetUpBoard()
             grid[y][x] = {units: 5, owner: 0};   
         }
     }
+
+    players[1] = {units: 5};
+    players[2] = {units: 5};
+    players[3] = {units: 5};
+    players[4] = {units: 5};
+    players[5] = {units: 5};
 
     grid[0][0]["owner"] = 1;
     grid[0][0]["units"] = 99;
@@ -37,11 +44,42 @@ router.get('/', function(req, res, next) {
 });
 
 /* RESET board */
-//Should be PUT
+//Should be POST
 router.get('/reset', function(req, res, next) {
     SetUpBoard();
     res.json(grid);
-  });
+});
+
+//Add unit to cell
+//only needs to return affected cells
+router.post('/deploy/:pId/:x1/:y1', function(req, res, next) {
+    const g = grid;
+    
+    const pId = parseInt(req.params.pId);
+
+    const x1 = req.params.x1;
+    const y1 = req.params.y1;
+
+    if (players[pId].units>0 &&  //have units to deploy
+        pId === g[y1][x1].owner) //valid target?
+    {
+        g[y1][x1].units++;
+        players[pId].units--;
+    }
+
+    console.log (pId + " Deployed units: [" + x1+ "," + y1 + "]");
+
+    res.json(grid);
+});
+
+//Return player data
+//Should force authentication
+router.get('/player/:pId', function(req, res, next) {
+    console.log ("Getting player data: " + pId);
+    const pId = parseInt(req.params.pId);
+
+    res.json(players[pId]);
+});
 
 //should be post
 //only needs to return affected cells
