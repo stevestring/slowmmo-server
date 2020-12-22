@@ -3,6 +3,9 @@ var router = express.Router();
 
 var grid = {};    
 var players = {};  
+
+var nextID = 6;//Next ID for new player (already have 1-5)
+
 SetUpBoard();
 setInterval(addReinforcements, 30000);
 
@@ -14,13 +17,12 @@ function addReinforcements() {
             if (grid[row][cell].owner !== 0)
             {   
                 players[grid[row][cell].owner].units++;
+                players[grid[row][cell].owner].squares++;
             }
         }
     }
 }
   
-
-
 
 function SetUpBoard()
 {
@@ -35,11 +37,17 @@ function SetUpBoard()
         }
     }
 
-    players[1] = {units: 5};
-    players[2] = {units: 5};
-    players[3] = {units: 5};
-    players[4] = {units: 5};
-    players[5] = {units: 5};
+//     0: "lightgrey",
+//     1: "lightblue",
+//     2: "orange",   
+//     3: "pink",
+//     4: "lightgreen"
+
+    players[0] = {units: 5, color:'lightgrey'};
+    players[1] = {units: 5, color:'lightblue'};
+    players[2] = {units: 5, color:'orange'};
+    players[3] = {units: 5, color:'pink'};
+    players[4] = {units: 5, color:'lightgreen'};
 
     grid[0][0]["owner"] = 1;
     grid[0][0]["units"] = 50;
@@ -61,11 +69,37 @@ router.get('/', function(req, res, next) {
 });
 
 /* RESET board */
-//Should be POST
-router.get('/reset', function(req, res, next) {
+router.post('/reset', function(req, res, next) {
     SetUpBoard();
     res.json(grid);
 });
+
+
+//Add unit to cell
+//only needs to return affected cells
+router.post('/claim', function(req, res, next) {
+    const g = grid;
+    
+    const pId = parseInt(req.body.pId);
+
+    const x1 = req.body.x1;
+    const y1 = req.body.y1;
+
+    if (players[pId].units > 0 &&  //have units to deploy
+        0 === g[y1][x1].owner &&
+        players[pId].squares===0) //valid target?
+    {
+        g[y1][x1].owner=pId;
+        g[y1][x1].units=1;
+        players[pId].units--;
+    }
+
+    console.log (pId + " Claimed square: [" + x1+ "," + y1 + "]");
+
+    res.json(grid);
+});
+
+
 
 //Add unit to cell
 //only needs to return affected cells
@@ -98,6 +132,31 @@ router.get('/player/:pId', function(req, res, next) {
     console.log ("Getting player data: " + pId);
     res.json(players[pId]);
 });
+
+//Return player data
+//Should force authentication
+router.get('/players', function(req, res, next) {
+    console.log ("Getting all players: ");
+    res.json(players);
+});
+
+
+/* Create player */
+router.post('/player', function(req, res, next) {
+    var newID = CreatePlayer(req.body.name,req.body.color);
+    console.log (newID + ":" + players[newID]);
+    console.log (players);
+    res.json(players[newID]);
+});
+
+function CreatePlayer(name, color)
+{
+    var newID = nextID;
+    players[newID] = {playerID: newID, units: 5, name:name, color:color, squares:0};
+    nextID++; //Could have concurrency issues
+    return newID;
+}
+
 
 //should be post
 //only needs to return affected cells
