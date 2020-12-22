@@ -4,7 +4,7 @@ var router = express.Router();
 var grid = {};    
 var players = {};  
 SetUpBoard();
-setInterval(addReinforcements, 10000);
+setInterval(addReinforcements, 30000);
 
 function addReinforcements() {
     console.log('Updating Reinforcements');
@@ -19,7 +19,6 @@ function addReinforcements() {
     }
 }
   
-
 
 
 
