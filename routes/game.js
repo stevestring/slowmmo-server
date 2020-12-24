@@ -7,7 +7,9 @@ var players = {};
 var nextID = 6;//Next ID for new player (already have 1-5)
 
 SetUpBoard();
-setInterval(addReinforcements, 30000);
+setInterval(addReinforcements, 10000);
+
+setInterval(AITurn, 1000);
 
 function addReinforcements() {
     console.log('Updating Reinforcements');
@@ -22,7 +24,49 @@ function addReinforcements() {
         }
     }
 }
-  
+
+function AITurn() {
+    const playerID = 1;
+    console.log('AI Move:' + playerID);
+    //could use entries?
+    
+    let units = players[playerID].units;
+
+    if (units>0)
+    for (const row of Object.keys(grid)) {
+        for (const cell of Object.keys(grid[row])) {
+            if (grid[row][cell].owner !== 0)
+            {   
+                if (grid[row][cell].owner === playerID)
+                {
+                    console.log(row+":"+cell);   
+                    console.log(grid[row][parseInt(cell)+1]);
+                    if (typeof grid[row][parseInt(cell)+1] !== 'undefined')//end of row
+                    {       
+                        console.log(row+":"+cell);                 
+                        if (grid[row][parseInt(cell)+1].owner !== playerID )//end of row
+                        {
+                            while (units>0)
+                            {
+                                Deploy (playerID, row, cell);//deploy 
+                                units--;
+                            }
+                            if (grid[row][cell].units>grid[row][parseInt(cell)+1].units*3)//attack if advantage
+                            {
+                                Attack (playerID, row,cell,row,parseInt(cell)+1);
+                                return;
+                            }
+                            else
+                            {
+                                return;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
 
 function SetUpBoard()
 {
@@ -36,12 +80,6 @@ function SetUpBoard()
             grid[y][x] = {units: 5, owner: 0};   
         }
     }
-
-//     0: "lightgrey",
-//     1: "lightblue",
-//     2: "orange",   
-//     3: "pink",
-//     4: "lightgreen"
 
     players[0] = {units: 5, color:'lightgrey'};
     players[1] = {units: 5, color:'lightblue'};
@@ -92,6 +130,7 @@ router.post('/claim', function(req, res, next) {
         g[y1][x1].owner=pId;
         g[y1][x1].units=1;
         players[pId].units--;
+        players[pId].squares=1;
     }
 
     console.log (pId + " Claimed square: [" + x1+ "," + y1 + "]");
@@ -111,18 +150,31 @@ router.post('/deploy/:pId/:x1/:y1', function(req, res, next) {
     const x1 = req.params.x1;
     const y1 = req.params.y1;
 
+    Deploy (pId,y1,x1);
+
+    res.json(grid);
+});
+
+function Deploy (pId, y1, x1)
+{
+    const g = grid;
     if (players[pId].units>0 &&  //have units to deploy
         pId === g[y1][x1].owner && 
         g[y1][x1].units < 99) //valid target?
     {
         g[y1][x1].units++;
         players[pId].units--;
+        console.log (pId + " Deployed units: [" + y1+ "," + x1 + "]");
+    }
+    else
+    {
+        console.log (pId + " Failed deployed units: [" + y1+ "," + x1 + "]");        
+        console.log (pId +":"+ g[y1][x1].owner);
+
     }
 
-    console.log (pId + " Deployed units: [" + x1+ "," + y1 + "]");
-
-    res.json(grid);
-});
+    
+}
 
 //Return player data
 //Should force authentication
@@ -177,16 +229,7 @@ router.get('/attack/:pId/:x1/:y1/:x2/:y2', function(req, res, next) {
     {
         if (Math.abs(x1-x2)<=1 && Math.abs(y1-y2)<=1) //adjacent
         {
-            if (Attack (x1,y1,x2,y2))
-            {
-                g[y2][x2].owner = pId;        
-                g[y2][x2].units = Math.floor(g[y1][x1].units/2);
-                g[y1][x1].units = g[y2][x2].units;//already half
-            }
-            else
-            {
-                 g[y1][x1].units = 0; //lost battle, set to 0 units
-            }
+            Attack (pId, y1,x1,y2,x2)  
         }
     }
     //console.log(g);
@@ -195,7 +238,7 @@ router.get('/attack/:pId/:x1/:y1/:x2/:y2', function(req, res, next) {
 });
 
 
-function Attack(sourceX, sourceY, targetX, targetY){
+function Attack(pId, sourceY, sourceX, targetY, targetX){
     const g = grid;
 
     //alert(unitsGrid);
@@ -210,10 +253,15 @@ function Attack(sourceX, sourceY, targetX, targetY){
 
     if(sScore>tScore)
     {
+
+        g[targetY][targetX].owner = pId;        
+        g[targetY][targetX].units = Math.floor(g[sourceY][sourceX].units/2);
+        g[sourceY][sourceX].units = g[targetY][targetX].units;//already half
         return true;
     }
     else
     {
+        g[sourceY][sourceX].units = 0; //lost battle, set to 0 units
         return false;
     }
     
