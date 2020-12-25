@@ -46,12 +46,12 @@ function AITurn() {
                         console.log(row+":"+cell);                 
                         if (grid[row][parseInt(cell)+1].owner !== playerID )//end of row
                         {
-                            while (units>0)
+                            while (units>0 && grid[row][parseInt(cell)].units !== 99)
                             {
                                 Deploy (playerID, row, cell);//deploy 
                                 units--;
                             }
-                            if (grid[row][cell].units>grid[row][parseInt(cell)+1].units*3)//attack if advantage
+                            if (grid[row][cell].units>grid[row][parseInt(cell)+1].units*2)//attack if advantage
                             {
                                 Attack (playerID, row,cell,row,parseInt(cell)+1);
                                 return;
