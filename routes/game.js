@@ -4,12 +4,20 @@ var router = express.Router();
 var grid = {};    
 var players = {};  
 
+var gridRows=20;
+var gridCols=30;
+
+
 var nextID = 6;//Next ID for new player (already have 1-5)
 
 SetUpBoard();
-setInterval(addReinforcements, 10000);
+setInterval(addReinforcements, 1000);
 
-setInterval(AITurn, 1000);
+
+setInterval(AITurn, 100,1);
+setInterval(AITurn, 100,2);
+setInterval(AITurn, 100,3);
+setInterval(AITurn, 100,4);
 
 function addReinforcements() {
     console.log('Updating Reinforcements');
@@ -25,58 +33,108 @@ function addReinforcements() {
     }
 }
 
-function AITurn() {
-    const playerID = 1;
-    console.log('AI Move:' + playerID);
-    //could use entries?
-    
-    let units = players[playerID].units;
+function getPlayerSquares(playerID) {
+    console.log('Getting Player Sqaures for player ID: ' + playerID);
 
-    if (units>0)
+    var squares = {};  
+    var i=0;
+     //could use entries?
+     
     for (const row of Object.keys(grid)) {
         for (const cell of Object.keys(grid[row])) {
-            if (grid[row][cell].owner !== 0)
+            if (grid[row][cell].owner === playerID)
             {   
-                if (grid[row][cell].owner === playerID)
-                {
-                    console.log(row+":"+cell);   
-                    console.log(grid[row][parseInt(cell)+1]);
-                    if (typeof grid[row][parseInt(cell)+1] !== 'undefined')//end of row
-                    {       
-                        console.log(row+":"+cell);                 
-                        if (grid[row][parseInt(cell)+1].owner !== playerID )//end of row
-                        {
-                            while (units>0 && grid[row][parseInt(cell)].units !== 99)
-                            {
-                                Deploy (playerID, row, cell);//deploy 
-                                units--;
-                            }
-                            if (grid[row][cell].units>grid[row][parseInt(cell)+1].units*2)//attack if advantage
-                            {
-                                Attack (playerID, row,cell,row,parseInt(cell)+1);
-                                return;
-                            }
-                            else
-                            {
-                                return;
-                            }
-                        }
-                    }
-                }
+                squares[i]=[+row,+cell];
+                i++;
             }
+        }
+    }
+    return squares;
+}
+
+function RandomProperty(obj) {
+    var keys = Object.keys(obj);
+    return obj[keys[ keys.length * Math.random() << 0]];
+};
+
+function AITurn(playerID) {
+    //const playerID = 1;
+    console.log('AI Move:' + playerID);
+
+    
+    let units = players[playerID].units;
+    let squares = getPlayerSquares(playerID);
+
+    let sq = [0,0];
+    let target = [0,0];
+    let targetMin=99;
+
+    if (units>0 && Object.keys(squares).length>0)
+    {
+        sq = RandomProperty(squares);
+    
+        console.log(sq);   
+
+        while (units>0 && grid[sq[0]][sq[1]].units !== 99)
+        {
+            Deploy (playerID, sq[0], sq[1]);//deploy 
+            units--;
+        }
+
+        //check U,D,L,R to find weakest opponent
+        if (sq[0]>1 && grid[sq[0]-1][sq[1]].owner!= playerID)
+        {
+            if (grid[sq[0]-1][sq[1]].units<targetMin)
+            {
+                target = [sq[0]-1,sq[1]];
+                targetMin = grid[sq[0]-1][sq[1]].units;
+            }
+        }
+        if (sq[0]<gridRows-2 && grid[sq[0]+1][sq[1]].owner!= playerID)
+        {
+            if (grid[sq[0]+1][sq[1]].units<targetMin)
+            {
+                target = [sq[0]+1,sq[1]];
+                targetMin = grid[sq[0]+1][sq[1]].units;
+            }
+        }
+        if (sq[1]>1 && grid[sq[0]][sq[1]-1].owner!= playerID)
+        {
+            if (grid[sq[0]][sq[1]-1].units<targetMin)
+            {
+                target = [sq[0],sq[1]-1];
+                targetMin = grid[sq[0]][sq[1]-1].units;
+            }
+        }
+        if (sq[1]<gridCols-2 && grid[sq[0]][sq[1]+1].owner!= playerID)
+        {
+            if (grid[sq[0]][sq[1]+1].units<targetMin)
+            {
+                target = [sq[0],sq[1]+1];
+                targetMin = grid[sq[0]][sq[1]+1].units;
+            }
+        }
+
+        //Attack?
+        if (grid[sq[0]][sq[1]].units>targetMin*2)//attack if advantage
+        {
+            Attack (playerID, sq[0],sq[1],target[0],target[1]);
+            return;
         }
     }
 }
 
 function SetUpBoard()
 {
-    var x;
-    var y;
+    var x=0;
+    var y=0;
+    var units=0;
     for (y=0; y<20; y++)
     {
         grid[y] = {};
         for (x=0; x<30; x++)
         {
+            units = Math.round(Math.random()*10);
             grid[y][x] = {units: 5, owner: 0};   
         }
     }
@@ -88,16 +146,16 @@ function SetUpBoard()
     players[4] = {units: 5, color:'lightgreen'};
 
     grid[0][0]["owner"] = 1;
-    grid[0][0]["units"] = 50;
+    grid[0][0]["units"] = 5;
 
     grid[0][29]["owner"] = 2;
-    grid[0][29]["units"] = 50;
+    grid[0][29]["units"] = 5;
 
     grid[19][29]["owner"] = 3;
-    grid[19][29]["units"] = 50;
+    grid[19][29]["units"] = 5;
 
     grid[19][0]["owner"] = 4;
-    grid[19][0]["units"] = 50;
+    grid[19][0]["units"] = 5;
 }
 
 
