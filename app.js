@@ -12,7 +12,14 @@ var gameRouter = require('./routes/game');
 var app = express();
 
 var server = require('http').Server(app);
-var io = require('socket.io')(server);
+
+var allowedOrigins = "*";
+var io = require('socket.io')(server, {  
+  cors: {
+  origin: "*",
+  methods: ["GET", "POST"]
+}});
+
 
 app.use(cors());
 
