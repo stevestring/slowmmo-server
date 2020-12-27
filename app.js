@@ -20,20 +20,30 @@ var io = require('socket.io')(server, {
   methods: ["GET", "POST"]
 }});
 
+var game = require('./game.js');
+game.AttachIO(io);
+
+//console.log(game.grid);
+
 
 app.use(cors());
 
 app.use(function(req, res, next){
-  res.io = io;
+  req.io = io;
+  req.game = game;
   next();
 });
 
-// io.on('connection', (socket) => {
-//   console.log('a user connected');
-//   client.on('board', (interval) => {
-//     console.log('client is subscribing board interval ', interval);
-//   });
-// });
+let interval;
+
+
+io.on('connection', (socket) => {
+  console.log('a user connected');
+  socket.on('disconnect', () => {
+    console.log('user disconnected');
+  });
+});
+
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
