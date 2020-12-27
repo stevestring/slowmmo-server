@@ -14,10 +14,10 @@ SetUpBoard();
 //setInterval(addReinforcements, 1000);
 
 
-setInterval(AITurn, 1000,1);
-setInterval(AITurn, 1000,2);
-setInterval(AITurn, 1000,3);
-setInterval(AITurn, 1000,4);
+// setInterval(AITurn, 1000,1);
+// setInterval(AITurn, 1000,2);
+// setInterval(AITurn, 1000,3);
+// setInterval(AITurn, 1000,4);
 
 function addReinforcements() {
     console.log('Updating Reinforcements');

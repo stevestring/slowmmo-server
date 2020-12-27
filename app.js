@@ -11,7 +11,22 @@ var gameRouter = require('./routes/game');
 
 var app = express();
 
+var server = require('http').Server(app);
+var io = require('socket.io')(server);
+
 app.use(cors());
+
+app.use(function(req, res, next){
+  res.io = io;
+  next();
+});
+
+// io.on('connection', (socket) => {
+//   console.log('a user connected');
+//   client.on('board', (interval) => {
+//     console.log('client is subscribing board interval ', interval);
+//   });
+// });
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -42,4 +57,4 @@ app.use(function(err, req, res, next) {
   res.render('error');
 });
 
-module.exports = app;
+module.exports = {app: app, server: server};;
