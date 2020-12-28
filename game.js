@@ -19,7 +19,7 @@ setInterval(AITurn, 1000,1);
 // setInterval(AITurn, 1000,3);
 // setInterval(AITurn, 1000,4);
 
-setInterval(keepAlive, 5000);
+//setInterval(keepAlive, 5000);
 
 function keepAlive()
 {
@@ -192,6 +192,7 @@ function CreatePlayer(name, color)
 //public
 function AttachIO(socket)
 {
+    console.log("io attached to game");
     io = socket;
 }
 
