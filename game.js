@@ -5,7 +5,7 @@ var players = {};
 var gridRows=20;
 var gridCols=30;
 
-var nextID = 6;//Next ID for new player (already have 1-5)
+var nextID = 11;//Next ID for new player (already have 1-5)
 
 SetUpBoard();
 
@@ -18,10 +18,10 @@ setInterval(AITurn, 1000,1);
 setInterval(AITurn, 1000,2);
 setInterval(AITurn, 1000,3);
 setInterval(AITurn, 1000,4);
-setInterval(AITurn, 1000,5);
-setInterval(AITurn, 1000,6);
-setInterval(AITurn, 1000,7);
-setInterval(AITurn, 1000,8);
+// setInterval(AITurn, 1000,5);
+// setInterval(AITurn, 1000,6);
+// setInterval(AITurn, 1000,7);
+// setInterval(AITurn, 1000,8);
 
 
 //setInterval(keepAlive, 5000);
@@ -147,7 +147,7 @@ function SetUpBoard()
     players[4] = {units: 5, color:'red'};
     players[5] = {units: 5, color:'blue'};
     players[6] = {units: 5, color:'purple'};
-    players[7] = {units: 5, color:'aqua'};
+    players[7] = {units: 5, color:'lightgreen'};
     players[8] = {units: 5, color:'gold'};
 
     grid[0][0]["owner"] = 1;
@@ -208,9 +208,9 @@ function AttachIO(socket)
 //public
 function Attack(pId, sourceY, sourceX, targetY, targetX){
     const g = grid;
-
-    //alert(unitsGrid);
-    console.log("Attack:" + sourceY + "," + sourceX + "," +  targetY + "," +  targetX)
+    var targetPId=0;
+    
+    //console.log("Attack:" + sourceY + "," + sourceX + "," +  targetY + "," +  targetX)
 
     // const sScore = g[sourceY][sourceX].units * Math.random();
     // const tScore = g[targetY][targetX].units * Math.random();
@@ -222,28 +222,31 @@ function Attack(pId, sourceY, sourceX, targetY, targetX){
     if (g[targetY][targetX].units===0)
     {
         win=true;
-        console.log("anything beats empty");
+        //console.log("anything beats empty");
     }
     else if (g[targetY][targetX].units===1)
     {
         win = g[sourceY][sourceX].units===3;  
-        console.log("paper beats rock"); 
+        //console.log("paper beats rock"); 
     }
     else if (g[targetY][targetX].units===2)
     {
         win = g[sourceY][sourceX].units===1;   
-        console.log("rock beats scissors"); 
+        //console.log("rock beats scissors"); 
     }
     else if (g[targetY][targetX].units===3)
     {
         win = g[sourceY][sourceX].units===2;   
-        console.log("rock scissors beats paper"); 
+        //console.log("rock scissors beats paper"); 
     }
     if(win)
     {
+        targetPId = g[targetY][targetX].owner; //need for remove square
         io.emit('board', {y:targetY, x:targetX, owner:pId});
         g[targetY][targetX].owner = pId;        
         g[targetY][targetX].units = g[sourceY][sourceX].units;
+        players[pId].squares++;
+        players[targetPId].squares--;
         return true;
     }
     else
@@ -251,6 +254,7 @@ function Attack(pId, sourceY, sourceX, targetY, targetX){
         io.emit('board', {y:sourceY, x:sourceX, owner:0});
         g[sourceY][sourceX].units = 0; //lost battle, set to 0 units
         g[sourceY][sourceX].owner = 0; //lost battle, set to no owner
+        players[pId].squares--;
         return false;
     }
     

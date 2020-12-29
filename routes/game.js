@@ -53,7 +53,15 @@ router.post('/deploy/:pId/:x1/:y1', function(req, res, next) {
 router.get('/player/:pId', function(req, res, next) {    
     const pId = parseInt(req.params.pId);
     console.log ("Getting player data: " + pId);
-    res.json(req.game.players[pId]);
+    
+    if (req.game.players[pId] !== undefined )
+    {
+        res.json(req.game.players[pId]);
+    }
+    else
+    {
+        res.json("");
+    }
 });
 
 //Return player data
