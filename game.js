@@ -15,9 +15,14 @@ var io={};
 //setInterval(addReinforcements, 1000);
 
 setInterval(AITurn, 1000,1);
-// setInterval(AITurn, 1000,2);
-// setInterval(AITurn, 1000,3);
-// setInterval(AITurn, 1000,4);
+setInterval(AITurn, 1000,2);
+setInterval(AITurn, 1000,3);
+setInterval(AITurn, 1000,4);
+setInterval(AITurn, 1000,5);
+setInterval(AITurn, 1000,6);
+setInterval(AITurn, 1000,7);
+setInterval(AITurn, 1000,8);
+
 
 //setInterval(keepAlive, 5000);
 
@@ -139,7 +144,11 @@ function SetUpBoard()
     players[1] = {units: 5, color:'lightblue'};
     players[2] = {units: 5, color:'orange'};
     players[3] = {units: 5, color:'pink'};
-    players[4] = {units: 5, color:'lightgreen'};
+    players[4] = {units: 5, color:'red'};
+    players[5] = {units: 5, color:'blue'};
+    players[6] = {units: 5, color:'purple'};
+    players[7] = {units: 5, color:'aqua'};
+    players[8] = {units: 5, color:'gold'};
 
     grid[0][0]["owner"] = 1;
     grid[0][0]["units"] = 1;
