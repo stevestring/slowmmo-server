@@ -12,7 +12,7 @@ SetUpBoard();
 var io={};
 
 //console.log(app);
-//setInterval(addReinforcements, AIInterval);
+setInterval(addReinforcements, 10000);
 
 const AIInterval=5000;
 
@@ -27,6 +27,19 @@ setInterval(AITurn, AIInterval,8);
 
 
 //setInterval(keepAlive, 5000);
+
+function addReinforcements()
+{
+    for (const pID of Object.keys(players)) 
+    {
+        if (players[pID].moves<5)
+        {   
+            players[pID].moves++;
+        }
+
+    }
+}
+
 
 function keepAlive()
 {
@@ -133,6 +146,9 @@ function SetUpBoard()
     var x=0;
     var y=0;
     var units=0;
+
+    const startingMoves=3;
+
     for (y=0; y<20; y++)
     {
         grid[y] = {};
@@ -143,15 +159,15 @@ function SetUpBoard()
         }
     }
 
-    players[0] = {units: 5, color:'lightgrey', kills: 0, killed:0, squares:0, score:0};
-    players[1] = {units: 5, color:'lightblue', kills: 0, killed:0,squares:0, score:0};
-    players[2] = {units: 5, color:'orange', kills: 0, killed:0,squares:0, score:0};
-    players[3] = {units: 5, color:'pink', kills: 0, killed:0,squares:0, score:0};
-    players[4] = {units: 5, color:'red', kills: 0, killed:0,squares:0, score:0};
-    players[5] = {units: 5, color:'blue', kills: 0, killed:0,squares:0, score:0};
-    players[6] = {units: 5, color:'purple', kills: 0, killed:0,squares:0, score:0};
-    players[7] = {units: 5, color:'lightgreen', kills: 0, killed:0,squares:0, score:0};
-    players[8] = {units: 5, color:'gold', kills: 0, killed:0,squares:0, score:0};
+    players[0] = {units: 5, name: 'CPU', color:'lightgrey', kills: 0, killed:0, squares:0, score:0, moves:startingMoves};
+    players[1] = {units: 5, name: 'Bob', color:'lightblue', kills: 0, killed:0,squares:0, score:0, moves:startingMoves};
+    players[2] = {units: 5, name: 'Bill', color:'orange', kills: 0, killed:0,squares:0, score:0, moves:startingMoves};
+    players[3] = {units: 5, name: 'Ned', color:'pink', kills: 0, killed:0,squares:0, score:0, moves:startingMoves};
+    players[4] = {units: 5, name: 'Buddy', color:'red', kills: 0, killed:0,squares:0, score:0, moves:startingMoves};
+    players[5] = {units: 5, name: 'Hank', color:'blue', kills: 0, killed:0,squares:0, score:0, moves:startingMoves};
+    players[6] = {units: 5, name: 'Gill', color:'purple', kills: 0, killed:0,squares:0, score:0, moves:startingMoves};
+    players[7] = {units: 5, name: 'Harry', color:'lightgreen', kills: 0, killed:0,squares:0, score:0, moves:startingMoves};
+    players[8] = {units: 5, name: 'Mutt', color:'gold', kills: 0, killed:0,squares:0, score:0, moves:startingMoves};
 
     grid[0][0]["owner"] = 1;
     grid[0][0]["units"] = 1;
@@ -197,7 +213,7 @@ function Deploy (pId, y1, x1)
 function CreatePlayer(name, color)
 {
     var newID = nextID;
-    players[newID] = {playerID: newID, units: 5, name:name, color:color, squares:0, kills:0, killed:0, score:0};
+    players[newID] = {playerID: newID, units: 5, name:name, color:color, squares:0, kills:0, killed:0, score:0, moves:3};
     nextID++; //Could have concurrency issues
     return newID;
 }
@@ -220,66 +236,74 @@ function Attack(pId, sourceY, sourceX, targetY, targetX){
 
     //console.log("Source:" + g[sourceY][sourceX].units + "," + sourceY + "," +  targetX + "," +  targetY)
 
-    if (g[targetY][targetX].units === g[sourceY][sourceX].units)//tie
+    if (players[pId].moves<=0)
     {
-        return 2;//tie
+        return -1;
     }
-    else //evaluate
+    else
     {
-        let win=false;
 
-        if (g[targetY][targetX].units===0)
+        if (g[targetY][targetX].units === g[sourceY][sourceX].units)//tie
         {
-            win=true;
-            //console.log("anything beats empty");
+            return 2;//tie
         }
-        else if (g[targetY][targetX].units===1)
+        else //evaluate
         {
-            win = g[sourceY][sourceX].units===3;  
-            //console.log("paper beats rock"); 
-        }
-        else if (g[targetY][targetX].units===2)
-        {
-            win = g[sourceY][sourceX].units===1;   
-            //console.log("rock beats scissors"); 
-        }
-        else if (g[targetY][targetX].units===3)
-        {
-            win = g[sourceY][sourceX].units===2;   
-            //console.log("rock scissors beats paper"); 
-        }
+            let win=false;
 
-        if(win)
-        {
-            targetPId = g[targetY][targetX].owner; //need for remove square
-            io.emit('board', {y:targetY, x:targetX, owner:pId});
-            g[targetY][targetX].owner = pId;        
-            g[targetY][targetX].units = g[sourceY][sourceX].units;
-            players[pId].squares++;
-            
-            if(targetPId !==0) //ignore gray squares
+            if (g[targetY][targetX].units===0)
             {
-                if(players[targetPId].squares<=1)
-                {
-                    players[pId].kills++;
-                    players[pId].score++;
-                    players[targetPId].killed++;
-                    players[targetPId].score--;
-                    console.log (targetPId + " killed by " + pId );
-                }        
-                players[targetPId].squares--;
+                win=true;
+                //console.log("anything beats empty");
             }
-            return 1;
-        }
-        else
-        {
-            // io.emit('board', {y:sourceY, x:sourceX, owner:0});
-            // g[sourceY][sourceX].units = 0; //lost battle, set to 0 units
-            // g[sourceY][sourceX].owner = 0; //lost battle, set to no owner
-            // players[pId].squares--;
+            else if (g[targetY][targetX].units===1)
+            {
+                win = g[sourceY][sourceX].units===3;  
+                //console.log("paper beats rock"); 
+            }
+            else if (g[targetY][targetX].units===2)
+            {
+                win = g[sourceY][sourceX].units===1;   
+                //console.log("rock beats scissors"); 
+            }
+            else if (g[targetY][targetX].units===3)
+            {
+                win = g[sourceY][sourceX].units===2;   
+                //console.log("rock scissors beats paper"); 
+            }
 
-            //should decrement player moves
-            return 0;
+            if(win)
+            {
+                targetPId = g[targetY][targetX].owner; //need for remove square
+                io.emit('board', {y:targetY, x:targetX, owner:pId});
+                g[targetY][targetX].owner = pId;        
+                g[targetY][targetX].units = g[sourceY][sourceX].units;
+                players[pId].squares++;
+                
+                if(targetPId !==0) //ignore gray squares
+                {
+                    if(players[targetPId].squares<=1)
+                    {
+                        players[pId].kills++;
+                        players[pId].score++;
+                        players[targetPId].killed++;
+                        players[targetPId].score--;
+                        console.log (targetPId + " killed by " + pId );
+                    }        
+                    players[targetPId].squares--;
+                }
+                return 1;
+            }
+            else
+            {
+                // io.emit('board', {y:sourceY, x:sourceX, owner:0});
+                // g[sourceY][sourceX].units = 0; //lost battle, set to 0 units
+                // g[sourceY][sourceX].owner = 0; //lost battle, set to no owner
+                // players[pId].squares--;
+
+                players[pId].moves--;
+                return 0;
+            }
         }
     }
 }
