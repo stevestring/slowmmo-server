@@ -18,10 +18,10 @@ setInterval(AITurn, 1000,1);
 setInterval(AITurn, 1000,2);
 setInterval(AITurn, 1000,3);
 setInterval(AITurn, 1000,4);
-// setInterval(AITurn, 1000,5);
-// setInterval(AITurn, 1000,6);
-// setInterval(AITurn, 1000,7);
-// setInterval(AITurn, 1000,8);
+setInterval(AITurn, 1000,5);
+setInterval(AITurn, 1000,6);
+setInterval(AITurn, 1000,7);
+setInterval(AITurn, 1000,8);
 
 
 //setInterval(keepAlive, 5000);
@@ -140,15 +140,15 @@ function SetUpBoard()
         }
     }
 
-    players[0] = {units: 5, color:'lightgrey'};
-    players[1] = {units: 5, color:'lightblue'};
-    players[2] = {units: 5, color:'orange'};
-    players[3] = {units: 5, color:'pink'};
-    players[4] = {units: 5, color:'red'};
-    players[5] = {units: 5, color:'blue'};
-    players[6] = {units: 5, color:'purple'};
-    players[7] = {units: 5, color:'lightgreen'};
-    players[8] = {units: 5, color:'gold'};
+    players[0] = {units: 5, color:'lightgrey', kills: 0, killed:0, squares:0};
+    players[1] = {units: 5, color:'lightblue', kills: 0, killed:0,squares:0};
+    players[2] = {units: 5, color:'orange', kills: 0, killed:0,squares:0};
+    players[3] = {units: 5, color:'pink', kills: 0, killed:0,squares:0};
+    players[4] = {units: 5, color:'red', kills: 0, killed:0,squares:0};
+    players[5] = {units: 5, color:'blue', kills: 0, killed:0,squares:0};
+    players[6] = {units: 5, color:'purple', kills: 0, killed:0,squares:0};
+    players[7] = {units: 5, color:'lightgreen', kills: 0, killed:0,squares:0};
+    players[8] = {units: 5, color:'gold', kills: 0, killed:0,squares:0};
 
     grid[0][0]["owner"] = 1;
     grid[0][0]["units"] = 1;
@@ -194,7 +194,7 @@ function Deploy (pId, y1, x1)
 function CreatePlayer(name, color)
 {
     var newID = nextID;
-    players[newID] = {playerID: newID, units: 5, name:name, color:color, squares:0};
+    players[newID] = {playerID: newID, units: 5, name:name, color:color, squares:0, kills:0, killed:0};
     nextID++; //Could have concurrency issues
     return newID;
 }
@@ -217,47 +217,65 @@ function Attack(pId, sourceY, sourceX, targetY, targetX){
 
     //console.log("Source:" + g[sourceY][sourceX].units + "," + sourceY + "," +  targetX + "," +  targetY)
 
-    let win=false;
+    if (g[targetY][targetX].units === g[sourceY][sourceX].units)//tie
+    {
+        return 2;//tie
+    }
+    else //evaluate
+    {
+        let win=false;
 
-    if (g[targetY][targetX].units===0)
-    {
-        win=true;
-        //console.log("anything beats empty");
+        if (g[targetY][targetX].units===0)
+        {
+            win=true;
+            //console.log("anything beats empty");
+        }
+        else if (g[targetY][targetX].units===1)
+        {
+            win = g[sourceY][sourceX].units===3;  
+            //console.log("paper beats rock"); 
+        }
+        else if (g[targetY][targetX].units===2)
+        {
+            win = g[sourceY][sourceX].units===1;   
+            //console.log("rock beats scissors"); 
+        }
+        else if (g[targetY][targetX].units===3)
+        {
+            win = g[sourceY][sourceX].units===2;   
+            //console.log("rock scissors beats paper"); 
+        }
+
+        if(win)
+        {
+            targetPId = g[targetY][targetX].owner; //need for remove square
+            io.emit('board', {y:targetY, x:targetX, owner:pId});
+            g[targetY][targetX].owner = pId;        
+            g[targetY][targetX].units = g[sourceY][sourceX].units;
+            players[pId].squares++;
+            
+            
+            if(players[targetPId].squares===1)
+            {
+                players[pId].kills++;
+                players[targetPId].killed++;
+                console.log (targetPId + " killed by " + pId );
+            }        
+            players[targetPId].squares--;
+
+            return 1;
+        }
+        else
+        {
+            // io.emit('board', {y:sourceY, x:sourceX, owner:0});
+            // g[sourceY][sourceX].units = 0; //lost battle, set to 0 units
+            // g[sourceY][sourceX].owner = 0; //lost battle, set to no owner
+            // players[pId].squares--;
+
+            //should decrement player moves
+            return 0;
+        }
     }
-    else if (g[targetY][targetX].units===1)
-    {
-        win = g[sourceY][sourceX].units===3;  
-        //console.log("paper beats rock"); 
-    }
-    else if (g[targetY][targetX].units===2)
-    {
-        win = g[sourceY][sourceX].units===1;   
-        //console.log("rock beats scissors"); 
-    }
-    else if (g[targetY][targetX].units===3)
-    {
-        win = g[sourceY][sourceX].units===2;   
-        //console.log("rock scissors beats paper"); 
-    }
-    if(win)
-    {
-        targetPId = g[targetY][targetX].owner; //need for remove square
-        io.emit('board', {y:targetY, x:targetX, owner:pId});
-        g[targetY][targetX].owner = pId;        
-        g[targetY][targetX].units = g[sourceY][sourceX].units;
-        players[pId].squares++;
-        players[targetPId].squares--;
-        return true;
-    }
-    else
-    {
-        io.emit('board', {y:sourceY, x:sourceX, owner:0});
-        g[sourceY][sourceX].units = 0; //lost battle, set to 0 units
-        g[sourceY][sourceX].owner = 0; //lost battle, set to no owner
-        players[pId].squares--;
-        return false;
-    }
-    
 }
 
 exports.grid = grid;
