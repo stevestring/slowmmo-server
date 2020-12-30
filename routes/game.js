@@ -94,18 +94,19 @@ router.get('/attack/:pId/:x1/:y1/:x2/:y2', function(req, res, next) {
     const x2 = req.params.x2;
     const y2 = req.params.y2;
 
+    let result = 0;
     //console.log (pId);
 
     if (g[y1][x1].owner !== g[y2][x2].owner && pId === g[y1][x1].owner) //valid target?
     {
         if (Math.abs(x1-x2)<=1 && Math.abs(y1-y2)<=1) //adjacent
         {
-            req.game.Attack (pId, y1,x1,y2,x2)  
+            result = req.game.Attack (pId, y1,x1,y2,x2);  
         }
     }
     //console.log(g);
     //grid[req.params.x1][req.params.y1] = 1;
-    res.json(g);
+    res.json({result:result});
 });
 
 

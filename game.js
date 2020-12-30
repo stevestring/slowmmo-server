@@ -12,16 +12,18 @@ SetUpBoard();
 var io={};
 
 //console.log(app);
-//setInterval(addReinforcements, 1000);
+//setInterval(addReinforcements, AIInterval);
 
-setInterval(AITurn, 1000,1);
-setInterval(AITurn, 1000,2);
-setInterval(AITurn, 1000,3);
-setInterval(AITurn, 1000,4);
-setInterval(AITurn, 1000,5);
-setInterval(AITurn, 1000,6);
-setInterval(AITurn, 1000,7);
-setInterval(AITurn, 1000,8);
+const AIInterval=5000;
+
+setInterval(AITurn, AIInterval,1);
+setInterval(AITurn, AIInterval,2);
+setInterval(AITurn, AIInterval,3);
+setInterval(AITurn, AIInterval,4);
+setInterval(AITurn, AIInterval,5);
+setInterval(AITurn, AIInterval,6);
+setInterval(AITurn, AIInterval,7);
+setInterval(AITurn, AIInterval,8);
 
 
 //setInterval(keepAlive, 5000);
@@ -108,6 +110,7 @@ function AITurn(playerID) {
     }
     else //Choose a new spot
     {
+        players[playerID].squares=1;
         console.log('Player: '+ + 'Finding new spot');
         //could use entries?
         for (const row of Object.keys(grid)) {
@@ -140,15 +143,15 @@ function SetUpBoard()
         }
     }
 
-    players[0] = {units: 5, color:'lightgrey', kills: 0, killed:0, squares:0};
-    players[1] = {units: 5, color:'lightblue', kills: 0, killed:0,squares:0};
-    players[2] = {units: 5, color:'orange', kills: 0, killed:0,squares:0};
-    players[3] = {units: 5, color:'pink', kills: 0, killed:0,squares:0};
-    players[4] = {units: 5, color:'red', kills: 0, killed:0,squares:0};
-    players[5] = {units: 5, color:'blue', kills: 0, killed:0,squares:0};
-    players[6] = {units: 5, color:'purple', kills: 0, killed:0,squares:0};
-    players[7] = {units: 5, color:'lightgreen', kills: 0, killed:0,squares:0};
-    players[8] = {units: 5, color:'gold', kills: 0, killed:0,squares:0};
+    players[0] = {units: 5, color:'lightgrey', kills: 0, killed:0, squares:0, score:0};
+    players[1] = {units: 5, color:'lightblue', kills: 0, killed:0,squares:0, score:0};
+    players[2] = {units: 5, color:'orange', kills: 0, killed:0,squares:0, score:0};
+    players[3] = {units: 5, color:'pink', kills: 0, killed:0,squares:0, score:0};
+    players[4] = {units: 5, color:'red', kills: 0, killed:0,squares:0, score:0};
+    players[5] = {units: 5, color:'blue', kills: 0, killed:0,squares:0, score:0};
+    players[6] = {units: 5, color:'purple', kills: 0, killed:0,squares:0, score:0};
+    players[7] = {units: 5, color:'lightgreen', kills: 0, killed:0,squares:0, score:0};
+    players[8] = {units: 5, color:'gold', kills: 0, killed:0,squares:0, score:0};
 
     grid[0][0]["owner"] = 1;
     grid[0][0]["units"] = 1;
@@ -194,7 +197,7 @@ function Deploy (pId, y1, x1)
 function CreatePlayer(name, color)
 {
     var newID = nextID;
-    players[newID] = {playerID: newID, units: 5, name:name, color:color, squares:0, kills:0, killed:0};
+    players[newID] = {playerID: newID, units: 5, name:name, color:color, squares:0, kills:0, killed:0, score:0};
     nextID++; //Could have concurrency issues
     return newID;
 }
@@ -254,15 +257,18 @@ function Attack(pId, sourceY, sourceX, targetY, targetX){
             g[targetY][targetX].units = g[sourceY][sourceX].units;
             players[pId].squares++;
             
-            
-            if(players[targetPId].squares===1)
+            if(targetPId !==0) //ignore gray squares
             {
-                players[pId].kills++;
-                players[targetPId].killed++;
-                console.log (targetPId + " killed by " + pId );
-            }        
-            players[targetPId].squares--;
-
+                if(players[targetPId].squares<=1)
+                {
+                    players[pId].kills++;
+                    players[pId].score++;
+                    players[targetPId].killed++;
+                    players[targetPId].score--;
+                    console.log (targetPId + " killed by " + pId );
+                }        
+                players[targetPId].squares--;
+            }
             return 1;
         }
         else
